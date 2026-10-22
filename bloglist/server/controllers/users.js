@@ -44,13 +44,4 @@ usersRouter.get('/', async (request, response, next) => {
   }
 })
 
-usersRouter.delete('/', async (request, response, next) => {
-  try {
-    await User.deleteMany({})
-    response.status(204).end()
-  } catch (error) {
-    next(error)
-  }
-})
-
 module.exports = usersRouter

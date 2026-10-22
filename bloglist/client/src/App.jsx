@@ -7,6 +7,9 @@ import ErrorBoundary from './components/ErrorBoundary'
 import Login from './components/Login'
 import NotFound from './components/NotFound'
 import Notification from './components/Notification'
+import User from './components/User'
+import Users from './components/Users'
+import { useAllUsersStore } from './stores/allUsersStore'
 import { useBlogStore } from './stores/blogStore'
 import { useNotificationStore } from './stores/notificationStore'
 import { useUserStore } from './stores/userStore'
@@ -22,6 +25,9 @@ const App = () => {
   const deleteBlog = useBlogStore((state) => state.deleteBlog)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const users = useAllUsersStore((state) => state.users)
+  const usersLoaded = useAllUsersStore((state) => state.loaded)
+  const initializeUsers = useAllUsersStore((state) => state.initializeUsers)
   const user = useUserStore((state) => state.user)
   const initializeUser = useUserStore((state) => state.initializeUser)
   const login = useUserStore((state) => state.login)
@@ -32,10 +38,17 @@ const App = () => {
   const match = useMatch('/blogs/:id')
   const blog = match ? blogs.find((b) => b.id === match.params.id) : null
 
+  const userMatch = useMatch('/users/:id')
+  const shownUser = userMatch ? users.find((u) => u.id === userMatch.params.id) : null
+
   // blogs are public, so load them for everybody
   useEffect(() => {
     initializeBlogs().catch(() => {}) // on failure the store still sets loaded, and the list stays empty
   }, [initializeBlogs])
+
+  useEffect(() => {
+    initializeUsers().catch(() => {}) // on failure the store still sets loaded, and the list stays empty
+  }, [initializeUsers])
 
   useEffect(() => {
     initializeUser()
@@ -97,6 +110,9 @@ const App = () => {
         <Toolbar>
           <Button color="inherit" component={Link} to="/">
             blogs
+          </Button>
+          <Button color="inherit" component={Link} to="/users">
+            users
           </Button>
           {user && (
             <Button color="inherit" component={Link} to="/create">
@@ -165,6 +181,14 @@ const App = () => {
                   </div>
                 ))}
               </div>
+            }
+          />
+          <Route path="/users" element={<Users />} />
+          <Route
+            path="/users/:id"
+            element={
+              // show nothing until the users have loaded, otherwise every id would flash "not found"
+              !usersLoaded ? null : shownUser ? <User user={shownUser} /> : <NotFound />
             }
           />
           <Route path="*" element={<NotFound />} />
