@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import anecdoteService from '../services/anecdotes'
 
 export const useField = (type) => {
   const [value, setValue] = useState('')
@@ -20,4 +21,24 @@ export const useField = (type) => {
       onChange
     }
   }
+}
+
+export const useAnecdotes = () => {
+  const [anecdotes, setAnecdotes] = useState([])
+
+  useEffect(() => {
+    let ignore = false
+
+    anecdoteService.getAll().then(initialAnecdotes => {
+      if (!ignore) {
+        setAnecdotes(initialAnecdotes)
+      }
+    })
+
+    return () => {
+      ignore = true
+    }
+  }, [])
+
+  return { anecdotes }
 }
