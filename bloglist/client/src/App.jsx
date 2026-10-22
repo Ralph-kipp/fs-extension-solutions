@@ -7,10 +7,9 @@ import ErrorBoundary from './components/ErrorBoundary'
 import Login from './components/Login'
 import NotFound from './components/NotFound'
 import Notification from './components/Notification'
-import blogService from './services/blogs'
-import loginService from './services/login'
 import { useBlogStore } from './stores/blogStore'
 import { useNotificationStore } from './stores/notificationStore'
+import { useUserStore } from './stores/userStore'
 
 const App = () => {
   const navigate = useNavigate()
@@ -23,7 +22,10 @@ const App = () => {
   const deleteBlog = useBlogStore((state) => state.deleteBlog)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [user, setUser] = useState(null)
+  const user = useUserStore((state) => state.user)
+  const initializeUser = useUserStore((state) => state.initializeUser)
+  const login = useUserStore((state) => state.login)
+  const logout = useUserStore((state) => state.logout)
   const setNotification = useNotificationStore((state) => state.setNotification)
 
   // 5.25: find the blog for /blogs/:id (needs <BrowserRouter> in main.jsx)
@@ -36,21 +38,13 @@ const App = () => {
   }, [initializeBlogs])
 
   useEffect(() => {
-    const loggedUserJSON = window.localStorage.getItem('loggedNoteAppUser')
-    if (loggedUserJSON) {
-      const loggedUser = JSON.parse(loggedUserJSON)
-      setUser(loggedUser)
-      blogService.setToken(loggedUser.token)
-    }
-  }, [])
+    initializeUser()
+  }, [initializeUser])
 
   const handleLogin = async (event) => {
     event.preventDefault()
     try {
-      const loggedUser = await loginService.login({ username, password })
-      window.localStorage.setItem('loggedNoteAppUser', JSON.stringify(loggedUser))
-      blogService.setToken(loggedUser.token)
-      setUser(loggedUser)
+      await login({ username, password })
       setUsername('')
       setPassword('')
       navigate('/') // only reached if login succeeded
@@ -60,9 +54,7 @@ const App = () => {
   }
 
   const handleLogout = () => {
-    window.localStorage.removeItem('loggedNoteAppUser')
-    blogService.setToken(null)
-    setUser(null)
+    logout()
     navigate('/')
   }
 
