@@ -1,39 +1,26 @@
-import { useState } from 'react'
-import { render, screen, fireEvent, act } from '@testing-library/react'
+import { render, screen, act } from '@testing-library/react'
 import { test, expect, vi, beforeEach, afterEach } from 'vitest'
 import Notification from '../src/components/Notification'
-
-// Mirrors App's notify() exactly: set the message, clear it after 5000ms.
-const NotifyWrapper = () => {
-  const [message, setMessage] = useState(null)
-
-  const notify = (msg) => {
-    setMessage({ text: msg, type: 'success' })
-    setTimeout(() => setMessage(null), 5000)
-  }
-
-  return (
-    <div>
-      <button onClick={() => notify('a new blog Test by Author added')}>trigger</button>
-      <Notification message={message} />
-    </div>
-  )
-}
+import { useNotificationStore } from '../src/stores/notificationStore'
 
 beforeEach(() => {
   vi.useFakeTimers()
+  useNotificationStore.setState({ notification: null })
 })
 
 afterEach(() => {
+  useNotificationStore.getState().clearNotification()
   vi.useRealTimers()
 })
 
 test('notification is hidden until triggered, then disappears after 5 seconds', () => {
-  render(<NotifyWrapper />)
+  render(<Notification />)
 
   expect(screen.queryByText('a new blog Test by Author added')).not.toBeInTheDocument()
 
-  fireEvent.click(screen.getByText('trigger'))
+  act(() => {
+    useNotificationStore.getState().setNotification('a new blog Test by Author added')
+  })
   expect(screen.getByText('a new blog Test by Author added')).toBeInTheDocument()
 
   act(() => {
@@ -45,4 +32,27 @@ test('notification is hidden until triggered, then disappears after 5 seconds', 
     vi.advanceTimersByTime(1)
   })
   expect(screen.queryByText('a new blog Test by Author added')).not.toBeInTheDocument()
+})
+
+test('a second notification restarts the timer', () => {
+  render(<Notification />)
+
+  act(() => {
+    useNotificationStore.getState().setNotification('first', 'error')
+  })
+  act(() => {
+    vi.advanceTimersByTime(3000)
+  })
+  act(() => {
+    useNotificationStore.getState().setNotification('second', 'error')
+  })
+  act(() => {
+    vi.advanceTimersByTime(4999)
+  })
+  expect(screen.getByText('second')).toBeInTheDocument()
+
+  act(() => {
+    vi.advanceTimersByTime(1)
+  })
+  expect(screen.queryByText('second')).not.toBeInTheDocument()
 })

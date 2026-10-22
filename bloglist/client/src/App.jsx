@@ -9,6 +9,7 @@ import NotFound from './components/NotFound'
 import Notification from './components/Notification'
 import blogService from './services/blogs'
 import loginService from './services/login'
+import { useNotificationStore } from './stores/notificationStore'
 
 const App = () => {
   const navigate = useNavigate()
@@ -18,7 +19,7 @@ const App = () => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
-  const [errorMessage, setErrorMessage] = useState(null)
+  const setNotification = useNotificationStore((state) => state.setNotification)
 
   // 5.25: find the blog for /blogs/:id (needs <BrowserRouter> in main.jsx)
   const match = useMatch('/blogs/:id')
@@ -41,11 +42,6 @@ const App = () => {
     }
   }, [])
 
-  const notify = (text, type = 'success') => {
-    setErrorMessage({ text, type })
-    setTimeout(() => setErrorMessage(null), 5000)
-  }
-
   const handleLogin = async (event) => {
     event.preventDefault()
     try {
@@ -57,7 +53,7 @@ const App = () => {
       setPassword('')
       navigate('/') // only reached if login succeeded
     } catch {
-      notify('Wrong username or password', 'error')
+      setNotification('Wrong username or password', 'error')
     }
   }
 
@@ -72,10 +68,10 @@ const App = () => {
     try {
       const newBlog = await blogService.create(blogObject)
       setBlogs(blogs.concat({ ...newBlog, user: { id: newBlog.user, username: user.username, name: user.name } }))
-      notify(`a new blog ${newBlog.title} by ${newBlog.author} added`)
+      setNotification(`a new blog ${newBlog.title} by ${newBlog.author} added`)
       navigate('/') // 5.26
     } catch {
-      notify('creating the blog failed', 'error')
+      setNotification('creating the blog failed', 'error')
     }
   }
 
@@ -92,7 +88,7 @@ const App = () => {
       const returnedBlog = await blogService.update(blog.id, updatedBlog)
       setBlogs(blogs.map((b) => (b.id === blog.id ? { ...returnedBlog, user: blog.user } : b)))
     } catch {
-      notify('updating the blog failed', 'error')
+      setNotification('updating the blog failed', 'error')
     }
   }
 
@@ -101,10 +97,10 @@ const App = () => {
       try {
         await blogService.remove(blog.id)
         setBlogs(blogs.filter((b) => b.id !== blog.id))
-        notify(`Deleted blog ${blog.title} by ${blog.author}`)
+        setNotification(`Deleted blog ${blog.title} by ${blog.author}`)
         navigate('/') // 5.26
       } catch {
-        notify('Deleting the blog failed', 'error')
+        setNotification('Deleting the blog failed', 'error')
       }
     }
   }
@@ -138,7 +134,7 @@ const App = () => {
         </Toolbar>
       </AppBar>
       <h2>blog app</h2>
-      <Notification message={errorMessage} /> {/* outside Routes: visible on every page */}
+      <Notification /> {/* outside Routes: visible on every page */}
       {/* Only the routed content is inside the boundary: the nav bar, heading and
           notification above stay outside, so they keep working after an error */}
       <ErrorBoundary>
