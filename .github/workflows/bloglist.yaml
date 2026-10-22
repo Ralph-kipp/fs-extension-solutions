@@ -3,7 +3,7 @@ name: bloglist tests
 on:
   push:
     branches:
-      - xmain
+      - main
 
 jobs:
   test:
