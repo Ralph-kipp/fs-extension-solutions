@@ -24,7 +24,7 @@ const mostBlogs = (blogs) => {
   const grouped = _.groupBy(blogs, 'author')
 
   // Convert to array: [{ author: 'Name', blogs: 3 }, ...]
-  const authorCounts = Object.keys(grouped).map(author => ({
+  const authorCounts = Object.keys(grouped).map((author) => ({
     author: author,
     blogs: grouped[author].length
   }))
@@ -42,7 +42,7 @@ const mostLikes = (blogs) => {
   const grouped = _.groupBy(blogs, 'author')
 
   // Sum up likes per author
-  const authorLikes = Object.keys(grouped).map(author => ({
+  const authorLikes = Object.keys(grouped).map((author) => ({
     author: author,
     likes: grouped[author].reduce((sum, blog) => sum + blog.likes, 0)
   }))

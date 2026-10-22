@@ -39,10 +39,8 @@ describe('Notes API', () => {
     user = new User({ username: 'testuser', name: 'Test User', passwordHash })
     await user.save()
 
-    const savedBlogs = await Blog.insertMany(
-      initialBlogs.map(blog => ({ ...blog, user: user._id }))
-    )
-    user.blogs = savedBlogs.map(blog => blog._id)
+    const savedBlogs = await Blog.insertMany(initialBlogs.map((blog) => ({ ...blog, user: user._id })))
+    user.blogs = savedBlogs.map((blog) => blog._id)
     await user.save()
 
     const loginResponse = await api
@@ -63,9 +61,7 @@ describe('Notes API', () => {
   })
 
   test('GET /api/blogs converts internal _id to id', async () => {
-    const response = await api
-      .get('/api/blogs')
-      .expect(200)
+    const response = await api.get('/api/blogs').expect(200)
 
     const blog = response.body[0]
     assert.notStrictEqual(blog.id, undefined, 'expected blog to have an id property')
@@ -83,7 +79,7 @@ describe('Notes API', () => {
     const response = await api.get('/api/blogs').expect(200)
     assert.strictEqual(response.body.length, initialBlogs.length + 1)
 
-    const created = response.body.find(b => b.title === newBlog.title)
+    const created = response.body.find((b) => b.title === newBlog.title)
     assert.strictEqual(created.likes, 0)
   })
 
@@ -94,21 +90,14 @@ describe('Notes API', () => {
       url: 'https://www.invalidblog.com'
     }
 
-    await api
-      .post('/api/blogs')
-      .set('Authorization', `Bearer ${token}`)
-      .send(invalidBlog)
-      .expect(400)
+    await api.post('/api/blogs').set('Authorization', `Bearer ${token}`).send(invalidBlog).expect(400)
   })
 
   test('DELETE /api/blogs/:id deletes a blog', async () => {
     const blogs = await api.get('/api/blogs').expect(200)
     const blogToDelete = blogs.body[0]
 
-    await api
-      .delete(`/api/blogs/${blogToDelete.id}`)
-      .set('Authorization', `Bearer ${token}`)
-      .expect(204)
+    await api.delete(`/api/blogs/${blogToDelete.id}`).set('Authorization', `Bearer ${token}`).expect(204)
 
     const after = await api.get('/api/blogs').expect(200)
     assert.strictEqual(after.body.length, initialBlogs.length - 1)

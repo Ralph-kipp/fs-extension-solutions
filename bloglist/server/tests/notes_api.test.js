@@ -1,8 +1,8 @@
-const { test,before, after } = require('node:test')
+const { test, before, after } = require('node:test')
 const mongoose = require('mongoose')
 const supertest = require('supertest')
 const app = require('../app')
-const {connectDB, disconnectDB} = require('../controllers/mongo')
+const { connectDB, disconnectDB } = require('../controllers/mongo')
 
 const api = supertest(app)
 

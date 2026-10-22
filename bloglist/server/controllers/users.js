@@ -32,24 +32,25 @@ usersRouter.post('/', async (request, response, next) => {
     response.status(201).json(savedUser)
   } catch (error) {
     next(error)
-  }})
+  }
+})
 
-  usersRouter.get('/', async (request, response, next) => {
-    try {
-      const users = await User.find({}).populate('blogs', { title: 1, author: 1, url: 1, id: 1 })
-      response.json(users)
-    } catch (error) {
-      next(error)
-    }
-    })
-  
-  usersRouter.delete('/', async (request, response, next) => {
-    try {
-      await User.deleteMany({})
-      response.status(204).end()
-    } catch (error) {
-      next(error)
-    }
-  })
+usersRouter.get('/', async (request, response, next) => {
+  try {
+    const users = await User.find({}).populate('blogs', { title: 1, author: 1, url: 1, id: 1 })
+    response.json(users)
+  } catch (error) {
+    next(error)
+  }
+})
+
+usersRouter.delete('/', async (request, response, next) => {
+  try {
+    await User.deleteMany({})
+    response.status(204).end()
+  } catch (error) {
+    next(error)
+  }
+})
 
 module.exports = usersRouter

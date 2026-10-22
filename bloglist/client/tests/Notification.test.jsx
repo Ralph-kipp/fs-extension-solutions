@@ -14,9 +14,7 @@ const NotifyWrapper = () => {
 
   return (
     <div>
-      <button onClick={() => notify('a new blog Test by Author added')}>
-        trigger
-      </button>
+      <button onClick={() => notify('a new blog Test by Author added')}>trigger</button>
       <Notification message={message} />
     </div>
   )

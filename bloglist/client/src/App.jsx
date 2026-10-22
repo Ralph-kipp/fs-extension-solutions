@@ -14,7 +14,7 @@ const App = () => {
   const navigate = useNavigate()
 
   const [blogs, setBlogs] = useState([])
-  const [blogsLoaded, setBlogsLoaded] = useState(false)   // true once the first getAll() has finished (or failed)
+  const [blogsLoaded, setBlogsLoaded] = useState(false) // true once the first getAll() has finished (or failed)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
@@ -22,12 +22,13 @@ const App = () => {
 
   // 5.25: find the blog for /blogs/:id (needs <BrowserRouter> in main.jsx)
   const match = useMatch('/blogs/:id')
-  const blog = match ? blogs.find(b => b.id === match.params.id) : null
+  const blog = match ? blogs.find((b) => b.id === match.params.id) : null
 
   // blogs are public, so load them for everybody
   useEffect(() => {
-    blogService.getAll()
-      .then(blogs => setBlogs(blogs))
+    blogService
+      .getAll()
+      .then((blogs) => setBlogs(blogs))
       .finally(() => setBlogsLoaded(true))
   }, [])
 
@@ -54,7 +55,7 @@ const App = () => {
       setUser(loggedUser)
       setUsername('')
       setPassword('')
-      navigate('/')                       // only reached if login succeeded
+      navigate('/') // only reached if login succeeded
     } catch {
       notify('Wrong username or password', 'error')
     }
@@ -72,14 +73,14 @@ const App = () => {
       const newBlog = await blogService.create(blogObject)
       setBlogs(blogs.concat({ ...newBlog, user: { id: newBlog.user, username: user.username, name: user.name } }))
       notify(`a new blog ${newBlog.title} by ${newBlog.author} added`)
-      navigate('/')                       // 5.26
+      navigate('/') // 5.26
     } catch {
       notify('creating the blog failed', 'error')
     }
   }
 
   const handleLike = async (blog) => {
-    if (!user) return                     // 5.25: only logged-in users can like
+    if (!user) return // 5.25: only logged-in users can like
     const updatedBlog = {
       user: blog.user ? blog.user.id : undefined,
       likes: blog.likes + 1,
@@ -89,7 +90,7 @@ const App = () => {
     }
     try {
       const returnedBlog = await blogService.update(blog.id, updatedBlog)
-      setBlogs(blogs.map(b => b.id === blog.id ? { ...returnedBlog, user: blog.user } : b))
+      setBlogs(blogs.map((b) => (b.id === blog.id ? { ...returnedBlog, user: blog.user } : b)))
     } catch {
       notify('updating the blog failed', 'error')
     }
@@ -99,69 +100,93 @@ const App = () => {
     if (window.confirm(`Remove blog ${blog.title} by ${blog.author}?`)) {
       try {
         await blogService.remove(blog.id)
-        setBlogs(blogs.filter(b => b.id !== blog.id))
+        setBlogs(blogs.filter((b) => b.id !== blog.id))
         notify(`Deleted blog ${blog.title} by ${blog.author}`)
-        navigate('/')                     // 5.26
+        navigate('/') // 5.26
       } catch {
         notify('Deleting the blog failed', 'error')
       }
     }
   }
 
-  const sortedBlogs = [...blogs].sort((a, b) => b.likes - a.likes)   // copy, don't mutate state
+  const sortedBlogs = [...blogs].sort((a, b) => b.likes - a.likes) // copy, don't mutate state
 
   return (
     <Container>
       <AppBar position="static">
         <Toolbar>
-          <Button color="inherit" component={Link} to="/">blogs</Button>
-          {user && <Button color="inherit" component={Link} to="/create">new blog</Button>}
-          {user
-            ? <>
+          <Button color="inherit" component={Link} to="/">
+            blogs
+          </Button>
+          {user && (
+            <Button color="inherit" component={Link} to="/create">
+              new blog
+            </Button>
+          )}
+          {user ? (
+            <>
               <span style={{ marginLeft: 'auto', marginRight: 10 }}>{user.name} logged in</span>
-              <Button color="inherit" onClick={handleLogout}>logout</Button>
+              <Button color="inherit" onClick={handleLogout}>
+                logout
+              </Button>
             </>
-            : <Button color="inherit" component={Link} to="/login" sx={{ marginLeft: 'auto' }}>login</Button>}
+          ) : (
+            <Button color="inherit" component={Link} to="/login" sx={{ marginLeft: 'auto' }}>
+              login
+            </Button>
+          )}
         </Toolbar>
       </AppBar>
-
       <h2>blog app</h2>
-      <Notification message={errorMessage} />   {/* outside Routes: visible on every page */}
-
+      <Notification message={errorMessage} /> {/* outside Routes: visible on every page */}
       {/* Only the routed content is inside the boundary: the nav bar, heading and
           notification above stay outside, so they keep working after an error */}
       <ErrorBoundary>
         <Routes>
-          <Route path="/login" element={
-            <Login
-              username={username}
-              password={password}
-              handleUsernameChange={({ target }) => setUsername(target.value)}
-              handlePasswordChange={({ target }) => setPassword(target.value)}
-              handleSubmit={handleLogin}
-            />
-          } />
-          <Route path="/create" element={
-            user ? <BlogForm createBlog={handleCreateBlog} /> : <Navigate replace to="/login" />
-          } />
-          <Route path="/blogs/:id" element={
-            // show nothing until the blogs have loaded, otherwise every id would flash "not found"
-            !blogsLoaded
-              ? null
-              : blog
-                ? <BlogView blog={blog} user={user} handleLike={handleLike} handleDelete={handleDelete} />
-                : <NotFound />
-          } />
-          <Route path="/" element={
-            <div>
-              <Typography variant="h4" component="h2">blogs</Typography>
-              {sortedBlogs.map(blog =>
-                <div key={blog.id}>
-                  <Link to={`/blogs/${blog.id}`}>{blog.title} {blog.author}</Link>
-                </div>
-              )}
-            </div>
-          } />
+          <Route
+            path="/login"
+            element={
+              <Login
+                username={username}
+                password={password}
+                handleUsernameChange={({ target }) => setUsername(target.value)}
+                handlePasswordChange={({ target }) => setPassword(target.value)}
+                handleSubmit={handleLogin}
+              />
+            }
+          />
+          <Route
+            path="/create"
+            element={user ? <BlogForm createBlog={handleCreateBlog} /> : <Navigate replace to="/login" />}
+          />
+          <Route
+            path="/blogs/:id"
+            element={
+              // show nothing until the blogs have loaded, otherwise every id would flash "not found"
+              !blogsLoaded ? null : blog ? (
+                <BlogView blog={blog} user={user} handleLike={handleLike} handleDelete={handleDelete} />
+              ) : (
+                <NotFound />
+              )
+            }
+          />
+          <Route
+            path="/"
+            element={
+              <div>
+                <Typography variant="h4" component="h2">
+                  blogs
+                </Typography>
+                {sortedBlogs.map((blog) => (
+                  <div key={blog.id}>
+                    <Link to={`/blogs/${blog.id}`}>
+                      {blog.title} {blog.author}
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            }
+          />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </ErrorBoundary>

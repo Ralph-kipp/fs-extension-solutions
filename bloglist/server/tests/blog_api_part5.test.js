@@ -22,10 +22,7 @@ const initialBlogs = [
 ]
 
 const login = async (username, password) => {
-  const response = await api
-    .post('/api/login')
-    .send({ username, password })
-    .expect(200)
+  const response = await api.post('/api/login').send({ username, password }).expect(200)
 
   return response.body.token
 }
@@ -54,10 +51,8 @@ beforeEach(async () => {
   })
   await user2.save()
 
-  const savedBlogs = await Blog.insertMany(
-    initialBlogs.map(blog => ({ ...blog, user: user._id }))
-  )
-  user.blogs = savedBlogs.map(blog => blog._id)
+  const savedBlogs = await Blog.insertMany(initialBlogs.map((blog) => ({ ...blog, user: user._id })))
+  user.blogs = savedBlogs.map((blog) => blog._id)
   await user.save()
 
   token = await login('testuser', 'testpassword')
@@ -118,7 +113,7 @@ describe('Creating blogs with a token', () => {
       .expect(201)
 
     const updatedUser = await User.findById(user._id)
-    const blogIds = updatedUser.blogs.map(id => id.toString())
+    const blogIds = updatedUser.blogs.map((id) => id.toString())
 
     assert.ok(blogIds.includes(response.body.id))
   })
@@ -182,11 +177,7 @@ describe('Creating blogs with a token', () => {
 
   test('an expired token returns 401 and creates nothing', async () => {
     // Signed here rather than waiting out the real one-hour expiry.
-    const expiredToken = jwt.sign(
-      { id: user._id, username: user.username },
-      process.env.SECRET,
-      { expiresIn: -1 }
-    )
+    const expiredToken = jwt.sign({ id: user._id, username: user.username }, process.env.SECRET, { expiresIn: -1 })
 
     const blogsBefore = await Blog.find({})
 
@@ -212,14 +203,11 @@ describe('Deleting blogs with a token', () => {
   test('the owner can delete their own blog', async () => {
     const blog = await Blog.findOne({ user: user._id })
 
-    await api
-      .delete(`/api/blogs/${blog._id}`)
-      .set('Authorization', `Bearer ${token}`)
-      .expect(204)
+    await api.delete(`/api/blogs/${blog._id}`).set('Authorization', `Bearer ${token}`).expect(204)
 
     const blogsAfter = await Blog.find({})
     assert.strictEqual(
-      blogsAfter.some(b => b._id.toString() === blog._id.toString()),
+      blogsAfter.some((b) => b._id.toString() === blog._id.toString()),
       false
     )
   })
@@ -227,13 +215,10 @@ describe('Deleting blogs with a token', () => {
   test('deleting a blog removes its id from the users blogs array', async () => {
     const blog = await Blog.findOne({ user: user._id })
 
-    await api
-      .delete(`/api/blogs/${blog._id}`)
-      .set('Authorization', `Bearer ${token}`)
-      .expect(204)
+    await api.delete(`/api/blogs/${blog._id}`).set('Authorization', `Bearer ${token}`).expect(204)
 
     const updatedUser = await User.findById(user._id)
-    const blogIds = updatedUser.blogs.map(id => id.toString())
+    const blogIds = updatedUser.blogs.map((id) => id.toString())
 
     assert.strictEqual(blogIds.includes(blog._id.toString()), false)
   })
@@ -241,10 +226,7 @@ describe('Deleting blogs with a token', () => {
   test('another user cannot delete a blog they do not own', async () => {
     const blog = await Blog.findOne({ user: user._id })
 
-    const response = await api
-      .delete(`/api/blogs/${blog._id}`)
-      .set('Authorization', `Bearer ${token2}`)
-      .expect(403)
+    const response = await api.delete(`/api/blogs/${blog._id}`).set('Authorization', `Bearer ${token2}`).expect(403)
 
     // 403, not 401: the requester is authenticated, just not permitted.
     assert.strictEqual(response.body.error, 'user not authorized to delete this blog')
@@ -254,10 +236,7 @@ describe('Deleting blogs with a token', () => {
   test('deleting a nonexistent blog returns 404', async () => {
     const nonexistentId = new mongoose.Types.ObjectId()
 
-    const response = await api
-      .delete(`/api/blogs/${nonexistentId}`)
-      .set('Authorization', `Bearer ${token}`)
-      .expect(404)
+    const response = await api.delete(`/api/blogs/${nonexistentId}`).set('Authorization', `Bearer ${token}`).expect(404)
 
     assert.strictEqual(response.body.error, 'blog not found')
   })
@@ -265,10 +244,7 @@ describe('Deleting blogs with a token', () => {
   test('deleting with a malformatted id returns 400', async () => {
     // A well-formed-but-absent id and an unparseable one are different paths:
     // this one never reaches the 404 above, it throws CastError first.
-    const response = await api
-      .delete('/api/blogs/not-an-object-id')
-      .set('Authorization', `Bearer ${token}`)
-      .expect(400)
+    const response = await api.delete('/api/blogs/not-an-object-id').set('Authorization', `Bearer ${token}`).expect(400)
 
     assert.strictEqual(response.body.error, 'malformatted id')
   })
@@ -276,9 +252,7 @@ describe('Deleting blogs with a token', () => {
   test('deleting without a token returns 401 and deletes nothing', async () => {
     const blog = await Blog.findOne({ user: user._id })
 
-    const response = await api
-      .delete(`/api/blogs/${blog._id}`)
-      .expect(401)
+    const response = await api.delete(`/api/blogs/${blog._id}`).expect(401)
 
     assert.strictEqual(response.body.error, 'token missing or invalid')
     assert.notStrictEqual(await Blog.findById(blog._id), null)

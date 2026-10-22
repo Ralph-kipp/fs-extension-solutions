@@ -3,11 +3,14 @@ import { test, expect, vi } from 'vitest'
 import BlogView from './BlogView'
 
 const blog = {
-  id: '1', title: 'Testing', author: 'Ann', url: 'http://x.com', likes: 5,
+  id: '1',
+  title: 'Testing',
+  author: 'Ann',
+  url: 'http://x.com',
+  likes: 5,
   user: { username: 'ralph', name: 'Ralph' }
 }
-const renderView = (user) =>
-  render(<BlogView blog={blog} user={user} handleLike={vi.fn()} handleDelete={vi.fn()} />)
+const renderView = (user) => render(<BlogView blog={blog} user={user} handleLike={vi.fn()} handleDelete={vi.fn()} />)
 
 test('unauthenticated user sees info and likes, but no buttons', () => {
   renderView(null)

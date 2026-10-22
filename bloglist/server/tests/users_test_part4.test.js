@@ -48,10 +48,7 @@ describe('Initial operations test for Users API', () => {
   test('GET /api/users returns all users', async () => {
     const usersBefore = await usersInDb()
 
-    await api
-      .post('/api/users')
-      .send({ username: 'testuser', name: 'Test User', password: 'testpassword' })
-      .expect(201)
+    await api.post('/api/users').send({ username: 'testuser', name: 'Test User', password: 'testpassword' }).expect(201)
 
     const response = await api
       .get('/api/users')
@@ -86,10 +83,7 @@ describe('Initial operations test for Users API', () => {
 
     await api.post('/api/users').send(newUser).expect(201)
 
-    const response = await api
-      .post('/api/users')
-      .send(newUser)
-      .expect(400)
+    const response = await api.post('/api/users').send(newUser).expect(400)
 
     assert.strictEqual(response.body.error, 'username must be unique')
   })

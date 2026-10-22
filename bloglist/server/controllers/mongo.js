@@ -16,7 +16,7 @@ const connectDB = async () => {
 const disconnectDB = async () => {
   try {
     await mongoose.connection.close()
-  }catch (err) {
+  } catch (err) {
     console.log('❌ MongoDB disconnection failed:')
     console.log(err.message)
   }

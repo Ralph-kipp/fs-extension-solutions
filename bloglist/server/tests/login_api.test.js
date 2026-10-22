@@ -43,10 +43,7 @@ describe('Login API', () => {
   })
 
   test('the returned token carries the users id', async () => {
-    const response = await api
-      .post('/api/login')
-      .send(credentials)
-      .expect(200)
+    const response = await api.post('/api/login').send(credentials).expect(200)
 
     const decodedToken = jwt.verify(response.body.token, process.env.SECRET)
     const user = await User.findOne({ username: credentials.username })
@@ -56,17 +53,11 @@ describe('Login API', () => {
   })
 
   test('login response does not contain passwordHash', async () => {
-    const response = await api
-      .post('/api/login')
-      .send(credentials)
-      .expect(200)
+    const response = await api.post('/api/login').send(credentials).expect(200)
 
     assert.strictEqual(response.body.passwordHash, undefined)
     assert.strictEqual(response.body.password, undefined)
-    assert.deepStrictEqual(
-      Object.keys(response.body).sort(),
-      ['name', 'token', 'username']
-    )
+    assert.deepStrictEqual(Object.keys(response.body).sort(), ['name', 'token', 'username'])
   })
 
   test('wrong password returns 401', async () => {
