@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
-import { Container, AppBar, Toolbar, Button } from '@mui/material'
+import { Container, AppBar, Toolbar, Button, Typography } from '@mui/material'
 import { Routes, Route, Link, Navigate, useNavigate, useMatch } from 'react-router-dom'
 import BlogForm from './components/BlogForm'
 import BlogView from './components/BlogView'
+import ErrorBoundary from './components/ErrorBoundary'
 import Login from './components/Login'
+import NotFound from './components/NotFound'
 import Notification from './components/Notification'
 import blogService from './services/blogs'
 import loginService from './services/login'
@@ -12,6 +14,7 @@ const App = () => {
   const navigate = useNavigate()
 
   const [blogs, setBlogs] = useState([])
+  const [blogsLoaded, setBlogsLoaded] = useState(false)   // true once the first getAll() has finished (or failed)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
@@ -23,7 +26,9 @@ const App = () => {
 
   // blogs are public, so load them for everybody
   useEffect(() => {
-    blogService.getAll().then(blogs => setBlogs(blogs))
+    blogService.getAll()
+      .then(blogs => setBlogs(blogs))
+      .finally(() => setBlogsLoaded(true))
   }, [])
 
   useEffect(() => {
@@ -123,32 +128,43 @@ const App = () => {
       <h2>blog app</h2>
       <Notification message={errorMessage} />   {/* outside Routes: visible on every page */}
 
-      <Routes>
-        <Route path="/login" element={
-          <Login
-            username={username}
-            password={password}
-            handleUsernameChange={({ target }) => setUsername(target.value)}
-            handlePasswordChange={({ target }) => setPassword(target.value)}
-            handleSubmit={handleLogin}
-          />
-        } />
-        <Route path="/create" element={
-          user ? <BlogForm createBlog={handleCreateBlog} /> : <Navigate replace to="/login" />
-        } />
-        <Route path="/blogs/:id" element={
-          <BlogView blog={blog} user={user} handleLike={handleLike} handleDelete={handleDelete} />
-        } />
-        <Route path="/" element={
-          <div>
-            {sortedBlogs.map(blog =>
-              <div key={blog.id}>
-                <Link to={`/blogs/${blog.id}`}>{blog.title} {blog.author}</Link>
-              </div>
-            )}
-          </div>
-        } />
-      </Routes>
+      {/* Only the routed content is inside the boundary: the nav bar, heading and
+          notification above stay outside, so they keep working after an error */}
+      <ErrorBoundary>
+        <Routes>
+          <Route path="/login" element={
+            <Login
+              username={username}
+              password={password}
+              handleUsernameChange={({ target }) => setUsername(target.value)}
+              handlePasswordChange={({ target }) => setPassword(target.value)}
+              handleSubmit={handleLogin}
+            />
+          } />
+          <Route path="/create" element={
+            user ? <BlogForm createBlog={handleCreateBlog} /> : <Navigate replace to="/login" />
+          } />
+          <Route path="/blogs/:id" element={
+            // show nothing until the blogs have loaded, otherwise every id would flash "not found"
+            !blogsLoaded
+              ? null
+              : blog
+                ? <BlogView blog={blog} user={user} handleLike={handleLike} handleDelete={handleDelete} />
+                : <NotFound />
+          } />
+          <Route path="/" element={
+            <div>
+              <Typography variant="h4" component="h2">blogs</Typography>
+              {sortedBlogs.map(blog =>
+                <div key={blog.id}>
+                  <Link to={`/blogs/${blog.id}`}>{blog.title} {blog.author}</Link>
+                </div>
+              )}
+            </div>
+          } />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </ErrorBoundary>
     </Container>
   )
 }

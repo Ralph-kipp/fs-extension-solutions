@@ -13,9 +13,9 @@ const BlogView = ({ blog, user, handleLike, handleDelete }) => {
           <MuiLink href={blog.url}>{blog.url}</MuiLink>
         </Typography>
         <Typography>likes {blog.likes}</Typography>
-        {blog.user && (
-          <Typography color="text.secondary">added by {blog.user.name}</Typography>
-        )}
+        {/* Rendered unguarded on purpose (exercise 9): a blog without a user throws here,
+            so the ErrorBoundary in App.jsx catches it */}
+        <Typography color="text.secondary">added by {blog.user.name}</Typography>
       </CardContent>
       {user && (
         <CardActions>
