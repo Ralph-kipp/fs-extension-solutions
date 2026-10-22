@@ -9,13 +9,18 @@ import NotFound from './components/NotFound'
 import Notification from './components/Notification'
 import blogService from './services/blogs'
 import loginService from './services/login'
+import { useBlogStore } from './stores/blogStore'
 import { useNotificationStore } from './stores/notificationStore'
 
 const App = () => {
   const navigate = useNavigate()
 
-  const [blogs, setBlogs] = useState([])
-  const [blogsLoaded, setBlogsLoaded] = useState(false) // true once the first getAll() has finished (or failed)
+  const blogs = useBlogStore((state) => state.blogs)
+  const blogsLoaded = useBlogStore((state) => state.loaded)
+  const initializeBlogs = useBlogStore((state) => state.initializeBlogs)
+  const createBlog = useBlogStore((state) => state.createBlog)
+  const likeBlog = useBlogStore((state) => state.likeBlog)
+  const deleteBlog = useBlogStore((state) => state.deleteBlog)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
@@ -27,11 +32,8 @@ const App = () => {
 
   // blogs are public, so load them for everybody
   useEffect(() => {
-    blogService
-      .getAll()
-      .then((blogs) => setBlogs(blogs))
-      .finally(() => setBlogsLoaded(true))
-  }, [])
+    initializeBlogs().catch(() => {}) // on failure the store still sets loaded, and the list stays empty
+  }, [initializeBlogs])
 
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedNoteAppUser')
@@ -66,8 +68,7 @@ const App = () => {
 
   const handleCreateBlog = async (blogObject) => {
     try {
-      const newBlog = await blogService.create(blogObject)
-      setBlogs(blogs.concat({ ...newBlog, user: { id: newBlog.user, username: user.username, name: user.name } }))
+      const newBlog = await createBlog(blogObject)
       setNotification(`a new blog ${newBlog.title} by ${newBlog.author} added`)
       navigate('/') // 5.26
     } catch {
@@ -77,16 +78,8 @@ const App = () => {
 
   const handleLike = async (blog) => {
     if (!user) return // 5.25: only logged-in users can like
-    const updatedBlog = {
-      user: blog.user ? blog.user.id : undefined,
-      likes: blog.likes + 1,
-      author: blog.author,
-      title: blog.title,
-      url: blog.url
-    }
     try {
-      const returnedBlog = await blogService.update(blog.id, updatedBlog)
-      setBlogs(blogs.map((b) => (b.id === blog.id ? { ...returnedBlog, user: blog.user } : b)))
+      await likeBlog(blog)
     } catch {
       setNotification('updating the blog failed', 'error')
     }
@@ -95,8 +88,7 @@ const App = () => {
   const handleDelete = async (blog) => {
     if (window.confirm(`Remove blog ${blog.title} by ${blog.author}?`)) {
       try {
-        await blogService.remove(blog.id)
-        setBlogs(blogs.filter((b) => b.id !== blog.id))
+        await deleteBlog(blog.id)
         setNotification(`Deleted blog ${blog.title} by ${blog.author}`)
         navigate('/') // 5.26
       } catch {
