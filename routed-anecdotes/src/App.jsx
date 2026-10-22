@@ -4,15 +4,8 @@ import AnecdoteList from './components/AnecdoteList'
 import About from './components/About'
 import Footer from './components/Footer'
 import CreateNew from './components/CreateNew'
-import anecdoteService from './services/anecdotes'
 
 const App = () => {
-  // Temporary until exercise 5 moves creating into the useAnecdotes hook:
-  // save the anecdote to the server (AnecdoteList loads the list itself).
-  const addAnecdote = async (anecdote) => {
-    await anecdoteService.createNew(anecdote)
-  }
-
   return (
     <Router>
       <div>
@@ -20,7 +13,7 @@ const App = () => {
         <Menu />
         <Routes>
           <Route path="/" element={<AnecdoteList />} />
-          <Route path="/create" element={<CreateNew addAnecdote={addAnecdote} />} />
+          <Route path="/create" element={<CreateNew />} />
           <Route path="/about" element={<About />} />
         </Routes>
         <Footer />
