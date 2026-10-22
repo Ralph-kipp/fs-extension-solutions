@@ -33,6 +33,13 @@ export const useBlogStore = create((set) => ({
       blogs: state.blogs.map((b) => (b.id === blog.id ? { ...returnedBlog, user: blog.user } : b))
     }))
   },
+  addComment: async (id, comment) => {
+    const returnedBlog = await blogService.addComment(id, comment)
+    // keep the user we already have, only take the comments from the server
+    set((state) => ({
+      blogs: state.blogs.map((b) => (b.id === id ? { ...b, comments: returnedBlog.comments } : b))
+    }))
+  },
   deleteBlog: async (id) => {
     await blogService.remove(id)
     set((state) => ({ blogs: state.blogs.filter((b) => b.id !== id) }))

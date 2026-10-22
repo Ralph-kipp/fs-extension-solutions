@@ -1,4 +1,5 @@
 import { Component } from 'react'
+import { Alert, AlertTitle, Box, Button } from '@mui/material'
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -21,11 +22,20 @@ class ErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div role="alert">
-          <h3>Something went wrong.</h3>
-          <p>{this.state.error?.message}</p>
-          <button onClick={this.handleReset}>try again</button>
-        </div>
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 8 }}>
+          <Alert
+            severity="error"
+            sx={{ maxWidth: 600, width: '100%' }}
+            action={
+              <Button color="inherit" size="small" onClick={this.handleReset}>
+                try again
+              </Button>
+            }
+          >
+            <AlertTitle>Something went wrong.</AlertTitle>
+            {this.state.error?.message}
+          </Alert>
+        </Box>
       )
     }
 

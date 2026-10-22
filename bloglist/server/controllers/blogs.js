@@ -71,6 +71,35 @@ blogsRouter.put('/:id', async (request, response, next) => {
   }
 })
 
+// POST /api/blogs/:id/comments → add an anonymous comment (no login needed)
+
+blogsRouter.post('/:id/comments', async (request, response, next) => {
+  try {
+    const { comment } = request.body
+
+    if (typeof comment !== 'string' || comment.trim().length === 0) {
+      return response.status(400).json({ error: 'comment must be a non-empty string' })
+    }
+    if (comment.trim().length > 500) {
+      return response.status(400).json({ error: 'comment must be at most 500 characters long' })
+    }
+
+    const updatedBlog = await Blog.findByIdAndUpdate(
+      request.params.id,
+      { $push: { comments: comment.trim() } },
+      { returnDocument: 'after' }
+    ).populate('user', { username: 1, name: 1, id: 1 })
+
+    if (!updatedBlog) {
+      return response.status(404).json({ error: 'blog not found' })
+    }
+
+    response.status(201).json(updatedBlog)
+  } catch (error) {
+    next(error)
+  }
+})
+
 // DELETE /api/blogs/:id → delete a blog by ID
 
 blogsRouter.delete('/:id', userExtractor, async (request, response, next) => {

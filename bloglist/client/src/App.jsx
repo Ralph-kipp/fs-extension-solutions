@@ -23,6 +23,7 @@ const App = () => {
   const createBlog = useBlogStore((state) => state.createBlog)
   const likeBlog = useBlogStore((state) => state.likeBlog)
   const deleteBlog = useBlogStore((state) => state.deleteBlog)
+  const addComment = useBlogStore((state) => state.addComment)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const users = useAllUsersStore((state) => state.users)
@@ -102,12 +103,23 @@ const App = () => {
     }
   }
 
+  // returns true when the comment was saved, so BlogView knows it can clear the input
+  const handleComment = async (blog, comment) => {
+    try {
+      await addComment(blog.id, comment)
+      return true
+    } catch {
+      setNotification('adding the comment failed', 'error')
+      return false
+    }
+  }
+
   const sortedBlogs = [...blogs].sort((a, b) => b.likes - a.likes) // copy, don't mutate state
 
   return (
     <Container>
       <AppBar position="static">
-        <Toolbar>
+        <Toolbar sx={{ flexWrap: 'wrap' }}>
           <Button color="inherit" component={Link} to="/">
             blogs
           </Button>
@@ -121,7 +133,9 @@ const App = () => {
           )}
           {user ? (
             <>
-              <span style={{ marginLeft: 'auto', marginRight: 10 }}>{user.name} logged in</span>
+              <Typography component="span" sx={{ ml: 'auto', mr: 1.25 }}>
+                {user.name} logged in
+              </Typography>
               <Button color="inherit" onClick={handleLogout}>
                 logout
               </Button>
@@ -133,7 +147,9 @@ const App = () => {
           )}
         </Toolbar>
       </AppBar>
-      <h2>blog app</h2>
+      <Typography variant="h5" component="h2" sx={{ mt: 2, mb: 1 }}>
+        blog app
+      </Typography>
       <Notification /> {/* outside Routes: visible on every page */}
       {/* Only the routed content is inside the boundary: the nav bar, heading and
           notification above stay outside, so they keep working after an error */}
@@ -160,7 +176,13 @@ const App = () => {
             element={
               // show nothing until the blogs have loaded, otherwise every id would flash "not found"
               !blogsLoaded ? null : blog ? (
-                <BlogView blog={blog} user={user} handleLike={handleLike} handleDelete={handleDelete} />
+                <BlogView
+                  blog={blog}
+                  user={user}
+                  handleLike={handleLike}
+                  handleDelete={handleDelete}
+                  handleComment={handleComment}
+                />
               ) : (
                 <NotFound />
               )

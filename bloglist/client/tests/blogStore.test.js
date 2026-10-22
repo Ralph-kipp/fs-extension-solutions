@@ -3,7 +3,7 @@ import blogService from '../src/services/blogs'
 import { useBlogStore } from '../src/stores/blogStore'
 
 vi.mock('../src/services/blogs', () => ({
-  default: { getAll: vi.fn(), create: vi.fn(), update: vi.fn(), remove: vi.fn() }
+  default: { getAll: vi.fn(), create: vi.fn(), update: vi.fn(), remove: vi.fn(), addComment: vi.fn() }
 }))
 
 const user = { id: 'u1', username: 'root', name: 'Root' }
@@ -39,4 +39,19 @@ test('deleteBlog removes the blog from the list', async () => {
   blogService.remove.mockResolvedValue()
   await useBlogStore.getState().deleteBlog('b1')
   expect(useBlogStore.getState().blogs).toEqual([])
+})
+
+test('addComment updates the comments and keeps the populated user', async () => {
+  useBlogStore.setState({ blogs: [blog] })
+  blogService.addComment.mockResolvedValue({ ...blog, user: 'u1', comments: ['hello'] })
+  await useBlogStore.getState().addComment('b1', 'hello')
+  expect(blogService.addComment).toHaveBeenCalledWith('b1', 'hello')
+  expect(useBlogStore.getState().blogs[0]).toMatchObject({ comments: ['hello'], user })
+})
+
+test('addComment throws on failure and leaves the blog unchanged', async () => {
+  useBlogStore.setState({ blogs: [blog] })
+  blogService.addComment.mockRejectedValue(new Error('500'))
+  await expect(useBlogStore.getState().addComment('b1', 'hello')).rejects.toThrow()
+  expect(useBlogStore.getState().blogs[0]).toEqual(blog)
 })
